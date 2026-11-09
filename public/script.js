@@ -16,15 +16,37 @@ mobileNav?.querySelectorAll('a').forEach(link => link.addEventListener('click', 
 }));
 
 const dropdown = document.querySelector('.nav-dropdown');
-dropdown?.querySelector('.dropdown-trigger')?.addEventListener('click', () => {
-  const isOpen = dropdown.classList.toggle('open');
-  dropdown.querySelector('.dropdown-trigger').setAttribute('aria-expanded', String(isOpen));
+const dropdownTrigger = dropdown?.querySelector('.dropdown-trigger');
+const setDropdownOpen = open => {
+  dropdown?.classList.toggle('open', open);
+  dropdownTrigger?.setAttribute('aria-expanded', String(open));
+};
+dropdown?.addEventListener('pointerenter', event => {
+  if (event.pointerType !== 'touch') setDropdownOpen(true);
+});
+dropdown?.addEventListener('pointerleave', event => {
+  if (event.pointerType !== 'touch') setDropdownOpen(false);
+});
+dropdownTrigger?.addEventListener('click', event => {
+  // Mouse clicks must not latch the hover menu open after the pointer leaves.
+  if (event.detail > 0 && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    setDropdownOpen(true);
+  } else {
+    setDropdownOpen(!dropdown.classList.contains('open'));
+  }
+});
+dropdown?.addEventListener('focusin', () => setDropdownOpen(true));
+dropdown?.addEventListener('focusout', event => {
+  if (!dropdown.contains(event.relatedTarget)) setDropdownOpen(false);
+});
+dropdown?.addEventListener('keydown', event => {
+  if (event.key === 'Escape') {
+    dropdownTrigger.focus();
+    setDropdownOpen(false);
+  }
 });
 document.addEventListener('click', event => {
-  if (dropdown && !dropdown.contains(event.target)) {
-    dropdown.classList.remove('open');
-    dropdown.querySelector('.dropdown-trigger').setAttribute('aria-expanded', 'false');
-  }
+  if (dropdown && !dropdown.contains(event.target)) setDropdownOpen(false);
 });
 
 const serviceSelect = document.getElementById('serviceSelect');
